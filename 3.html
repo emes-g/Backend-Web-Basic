@@ -17,22 +17,28 @@
         </ol>
         <div id="article">
             <input type="button" value="night" onclick="
-                document.querySelector('body').style.backgroundColor = 'black';
-                document.querySelector('body').style.color = 'white';
-                // 모든 a 태그에 대해서 흰색 글씨로 수정
-                var elements = document.querySelectorAll('a');
-                for(var i=0; i<elements.length; i++)
-                    elements[i].style.color = 'white';
-                document.getElementById('active').style.color = 'red';
-                ">
-            <input type="button" value="day" onclick="
-                document.querySelector('body').style.backgroundColor = 'white';
-                document.querySelector('body').style.color = 'black';
-                // 모든 a 태그에 대해서 검은색 글씨로 수정
-                var elements = document.querySelectorAll('a');
-                for(var i=0; i<elements.length; i++)
-                    elements[i].style.color = 'black';
-                document.getElementById('active').style.color = 'red';
+                    var body = document.querySelector('body');
+                    var a_tags = document.querySelectorAll('a');
+                    
+                    if(this.value == 'night'){  
+                        this.value = 'day';
+                        body.style.backgroundColor = 'black';
+                        body.style.color = 'white';
+                        // don't change #active's code
+                        for(var i=0; i<a_tags.length; i++){
+                            if(window.getComputedStyle(a_tags[i]).color != 'rgb(255, 0, 0)')
+                                a_tags[i].style.color = 'white';
+                        }
+                    }
+                    else{
+                        this.value = 'night';
+                        body.style.backgroundColor = 'white';
+                        body.style.color = 'black';
+                        // change #active's code but fix it immediately
+                        for(var i=0; i<a_tags.length; i++)
+                            a_tags[i].style.color = 'black';
+                        document.getElementById('active').style.color = 'red';
+                    }
                 ">
             <h2>JavaScript</h2>
             <p>
