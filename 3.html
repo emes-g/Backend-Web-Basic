@@ -6,28 +6,36 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="style.css">
     <script defer>
-        function dayNightHandler(self) {
-            var body = document.querySelector('body');
-            var a_tags = document.querySelectorAll('a');
+        var body = {
+            setColor: function(color) {
+                document.querySelector('body').style.color = color;
+            },
+            setBackgroundColor: function(color) {
+                document.querySelector('body').style.backgroundColor = color;
+            }
+        }
+        var links = {
+            setColor: function(color) {
+                var links = document.querySelectorAll('a');
 
+                for (var i = 0; i < links.length; i++) {
+                    if (window.getComputedStyle(links[i]).color != 'rgb(255, 0, 0)')
+                        links[i].style.color = color;
+                }
+            }
+        }
+        function dayNightHandler(self) {
             if (self.value == 'night') {
                 self.value = 'day';
-                body.style.backgroundColor = 'black';
-                body.style.color = 'white';
-                // don't change #active's code
-                for (var i = 0; i < a_tags.length; i++) {
-                    if (window.getComputedStyle(a_tags[i]).color != 'rgb(255, 0, 0)')
-                        a_tags[i].style.color = 'white';
-                }
+                body.setBackgroundColor('black');
+                body.setColor('white');
+                links.setColor('white');
             }
             else {
                 self.value = 'night';
-                body.style.backgroundColor = 'white';
-                body.style.color = 'black';
-                // change #active's code but fix it immediately
-                for (var i = 0; i < a_tags.length; i++)
-                    a_tags[i].style.color = 'black';
-                document.getElementById('active').style.color = 'red';
+                body.setBackgroundColor('white');
+                body.setColor('black');
+                links.setColor('black');
             }
         }
     </script>
