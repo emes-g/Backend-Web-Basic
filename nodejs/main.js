@@ -11,41 +11,49 @@ var app = http.createServer(function (request, response) {
 
     if (pathname === '/') {
         fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
+            // 메인 홈페이지로 접속한 경우
             var title = queryData.id;
             if (title === undefined) {
                 title = 'Welcome';
                 description = 'Hello, Node.js';
             }
+
+            // 파일 리스트 변동
+            fs.readdir('data', function (error, filelist) {
+                var list = '<ul>';
+                for (var i = 0; i < filelist.length; i++) {
+                    list += `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+                }
+                list += '</ul>';
+
+                // 웹브라우저에 출력할 기본 템플릿
+                var template = `
+                <!DOCTYPE html>
+                <html>
             
-            var template = `
-            <!DOCTYPE html>
-            <html>
-        
-            <head>
-                <title>WEB1 - ${title}</title>
-                <meta charset="utf-8">
-                <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-            </head>
-        
-            <body>
-                <h1><a href="/">WEB</a></h1>
-                <div id="grid">
-                    <ol>
-                        <li><a href="/?id=HTML" id="active">HTML</a></li>
-                        <li><a href="/?id=CSS">CSS</a></li>
-                        <li><a href="/?id=JavaScript">JavaScript</a></li>
-                    </ol>
-                    <div id="article">
-                        <h2>${title}</h2>
-                        ${description}
+                <head>
+                    <title>WEB1 - ${title}</title>
+                    <meta charset="utf-8">
+                    <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+                </head>
+            
+                <body>
+                    <h1><a href="/">WEB</a></h1>
+                    <div id="grid">
+                        ${list}
+                        <div id="article">
+                            <h2>${title}</h2>
+                            ${description}
+                        </div>
                     </div>
-                </div>
-            </body>
-        
-            </html>
-            `;
-            response.writeHead(200);    // 200 : 파일을 성공적으로 전송했음
-            response.end(template);
+                </body>
+            
+                </html>
+                `;
+                response.writeHead(200);    // 200 : 파일을 성공적으로 전송했음
+                response.end(template);
+            });
+
         });
     } else {
         response.writeHead(404);    // 404 : 파일을 찾을 수 없음
