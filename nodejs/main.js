@@ -4,7 +4,7 @@ var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
 
-function templateHTML(title, list, body) {
+function templateHTML(title, list, body, control) {
     return `
     <!doctype html>
     <html>
@@ -17,7 +17,7 @@ function templateHTML(title, list, body) {
     <body>
         <h1><a href="/">WEB</a></h1>
         ${list}
-        <a href="/create">create</a>
+        ${control}
         ${body}
     </body>
 
@@ -50,7 +50,9 @@ var app = http.createServer(function (request, response) {
                 var title = 'Welcome';
                 var description = 'Hello, Node.js';
                 var list = templateList(filelist);
-                var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+                var template = templateHTML(title, list,
+                    `<h2>${title}</h2>${description}`,
+                    `<a href="/create">create</a>`);
                 response.writeHead(200);    // 200 : 파일을 성공적으로 전달함
                 response.end(template);
             })
@@ -61,7 +63,9 @@ var app = http.createServer(function (request, response) {
                 fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
                     var title = queryData.id;
                     var list = templateList(filelist);
-                    var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+                    var template = templateHTML(title, list,
+                        `<h2>${title}</h2>${description}`,
+                        `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
                     response.writeHead(200);
                     response.end(template);
                 });
@@ -73,12 +77,12 @@ var app = http.createServer(function (request, response) {
             var title = 'WEB - create';
             var list = templateList(filelist);
             var template = templateHTML(title, list, `
-            <form action="http://localhost:3000/create_process" method="post">
+            <form action="/create_process" method="post">
                 <p><input type="text" name="title" placeholder="title"></p>
-                <p><textarea name="description" placeholder="description"></textarea></p>
+                <p><textarea name="description" placeholder="description" cols=120 rows=5></textarea></p>
                 <p><input type="submit"></p>
             </form>
-            `);
+            `, '');
             response.writeHead(200);
             response.end(template);
         })
@@ -94,15 +98,57 @@ var app = http.createServer(function (request, response) {
             var post = qs.parse(body);
             var title = post.title;
             var description = post.description;
+            
             fs.writeFile(`data/${title}`, description, function (err) {
                 response.writeHead(302, {   // 302 : 페이지 리다이렉션
-                    location : `/?id=${title}`
+                    location: `/?id=${title}`
                 });
                 response.end();
             });
         });
-    }
-    else {
+    } else if (pathname === '/update') {
+        // update 버튼을 클릭한 경우
+        fs.readdir('./data', function (error, filelist) {
+            fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
+                var title = queryData.id;
+                var list = templateList(filelist);
+                var template = templateHTML(title, list, `
+                    <form action="/update_process" method="post">
+                        <p><input type="hidden" name="id" value="${title}"></p>
+                        <p><input type="text" name="title" placeholder="title" value="${title}"></p>
+                        <p><textarea name="description" placeholder="description" cols=120 rows=5>${description}</textarea></p>
+                        <p><input type="submit"></p>
+                    </form>
+                    `,
+                    `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+                response.writeHead(200);
+                response.end(template);
+            });
+        });
+    } else if (pathname === "/update_process") {
+        // /update 페이지에서 제출 버튼을 클릭한 경우
+        var body = '';
+
+        request.on('data', function (data) {
+            body += data;
+        });
+
+        request.on('end', function () {
+            var post = qs.parse(body);
+            var id = post.id;
+            var title = post.title;
+            var description = post.description;
+
+            fs.rename(`data/${id}`, `data/${title}`, function(err){
+                fs.writeFile(`data/${title}`, description, function(err){
+                    response.writeHead(302, {   // 302 : 페이지 리다이렉션
+                        location: `/?id=${title}`
+                    });
+                    response.end();
+                });
+            });
+        });
+    } else {
         response.writeHead(404);    // 404 : 파일을 찾을 수 없음
         response.end('Not found');
     }
