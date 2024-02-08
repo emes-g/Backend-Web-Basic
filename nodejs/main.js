@@ -4,33 +4,34 @@ var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
 
-function templateHTML(title, list, body, control) {
-    return `
-    <!doctype html>
-    <html>
-
-    <head>
-        <title>WEB1 - ${title}</title>
-        <meta charset="utf-8">
-        <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    </head>
-    <body>
-        <h1><a href="/">WEB</a></h1>
-        ${list}
-        ${control}
-        ${body}
-    </body>
-
-    </html>
-    `;
-}
-
-function templateList(filelist) {
-    var list = '<ul>';
-    for (var i = 0; i < filelist.length; i++)
-        list += `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`
-    list += '</ul>';
-    return list;
+var template = {
+    HTML: function (title, list, body, control) {
+        return `
+        <!doctype html>
+        <html>
+    
+        <head>
+            <title>WEB1 - ${title}</title>
+            <meta charset="utf-8">
+            <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        </head>
+        <body>
+            <h1><a href="/">WEB</a></h1>
+            ${list}
+            ${control}
+            ${body}
+        </body>
+    
+        </html>
+        `
+    },
+    list: function (filelist) {
+        var list = '<ul>';
+        for (var i = 0; i < filelist.length; i++)
+            list += `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`
+        list += '</ul>';
+        return list;
+    }
 }
 
 // 2. http 모듈로 서버를 생성, 사용자로부터 http 요청이 들어오면 function 블럭 내부의 코드를 실행해서 응답 
@@ -49,12 +50,12 @@ var app = http.createServer(function (request, response) {
             fs.readdir('./data', function (error, filelist) {
                 var title = 'Welcome';
                 var description = 'Hello, Node.js';
-                var list = templateList(filelist);
-                var template = templateHTML(title, list,
+                var list = template.list(filelist);
+                var html = template.HTML(title, list,
                     `<h2>${title}</h2>${description}`,
                     `<a href="/create">create</a>`);
                 response.writeHead(200);    // 200 : 파일을 성공적으로 전달함
-                response.end(template);
+                response.end(html);
             })
 
         } else {
@@ -62,8 +63,8 @@ var app = http.createServer(function (request, response) {
             fs.readdir('./data', function (error, filelist) {
                 fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
                     var title = queryData.id;
-                    var list = templateList(filelist);
-                    var template = templateHTML(title, list,
+                    var list = template.list(filelist);
+                    var html = template.HTML(title, list,
                         `<h2>${title}</h2>${description}`,
                         `<a href="/create">create</a> 
                          <a href="/update?id=${title}">update</a>
@@ -73,7 +74,7 @@ var app = http.createServer(function (request, response) {
                          </form>
                         `);
                     response.writeHead(200);
-                    response.end(template);
+                    response.end(html);
                 });
             });
         }
@@ -81,8 +82,8 @@ var app = http.createServer(function (request, response) {
         // create 버튼을 클릭한 경우
         fs.readdir('./data', function (error, filelist) {
             var title = 'WEB - create';
-            var list = templateList(filelist);
-            var template = templateHTML(title, list, `
+            var list = template.list(filelist);
+            var html = template.HTML(title, list, `
             <form action="/create_process" method="post">
                 <p><input type="text" name="title" placeholder="title"></p>
                 <p><textarea name="description" placeholder="description" cols=120 rows=5></textarea></p>
@@ -90,7 +91,7 @@ var app = http.createServer(function (request, response) {
             </form>
             `, '');
             response.writeHead(200);
-            response.end(template);
+            response.end(html);
         })
     } else if (pathname === '/create_process') {
         // /create 페이지에서 제출 버튼을 클릭한 경우
@@ -117,8 +118,8 @@ var app = http.createServer(function (request, response) {
         fs.readdir('./data', function (error, filelist) {
             fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
                 var title = queryData.id;
-                var list = templateList(filelist);
-                var template = templateHTML(title, list, `
+                var list = template.list(filelist);
+                var html = template.HTML(title, list, `
                     <form action="/update_process" method="post">
                         <p><input type="hidden" name="id" value="${title}"></p>
                         <p><input type="text" name="title" placeholder="title" value="${title}"></p>
@@ -127,7 +128,7 @@ var app = http.createServer(function (request, response) {
                     </form>
                     `, '');
                 response.writeHead(200);
-                response.end(template);
+                response.end(html);
             });
         });
     } else if (pathname === "/update_process") {
@@ -164,7 +165,7 @@ var app = http.createServer(function (request, response) {
         request.on('end', function () {
             var post = qs.parse(body);
             var id = post.id;
-            
+
             fs.unlink(`data/${id}`, function (err) {
                 response.writeHead(302, {   // 302 : 페이지 리다이렉션
                     location: '/'
