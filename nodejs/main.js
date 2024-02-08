@@ -5,6 +5,7 @@ var url = require('url');
 var qs = require('querystring');
 var template = require('./lib/template.js');
 var path = require('path');
+const sanitizeHtml = require('sanitize-html');
 
 // 2. http 모듈로 서버를 생성, 사용자로부터 http 요청이 들어오면 function 블럭 내부의 코드를 실행해서 응답 
 var app = http.createServer(function (request, response) {
@@ -34,16 +35,18 @@ var app = http.createServer(function (request, response) {
             // 메인 홈페이지가 아닌 경우
             fs.readdir('./data', function (error, filelist) {
                 var filteredId = path.parse(`${queryData.id}`).base;
-                
+
                 fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
                     var title = filteredId;
+                    var sanitizedTitle = sanitizeHtml(title);
+                    var sanitizedDescription = sanitizeHtml(description);
                     var list = template.list(filelist);
-                    var html = template.HTML(title, list,
-                        `<h2>${title}</h2>${description}`,
+                    var html = template.HTML(sanitizedTitle, list,
+                        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
                         `<a href="/create">create</a> 
-                         <a href="/update?id=${title}">update</a>
+                         <a href="/update?id=${sanitizedTitle}">update</a>
                          <form action="delete_process" method="post">
-                            <input type="hidden" name="id" value="${title}">
+                            <input type="hidden" name="id" value="${sanitizedTitle}">
                             <input type="submit" value="delete">
                          </form>
                         `);
