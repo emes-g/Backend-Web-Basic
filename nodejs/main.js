@@ -65,7 +65,13 @@ var app = http.createServer(function (request, response) {
                     var list = templateList(filelist);
                     var template = templateHTML(title, list,
                         `<h2>${title}</h2>${description}`,
-                        `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+                        `<a href="/create">create</a> 
+                         <a href="/update?id=${title}">update</a>
+                         <form action="delete_process" method="post">
+                            <input type="hidden" name="id" value="${title}">
+                            <input type="submit" value="delete">
+                         </form>
+                        `);
                     response.writeHead(200);
                     response.end(template);
                 });
@@ -98,7 +104,7 @@ var app = http.createServer(function (request, response) {
             var post = qs.parse(body);
             var title = post.title;
             var description = post.description;
-            
+
             fs.writeFile(`data/${title}`, description, function (err) {
                 response.writeHead(302, {   // 302 : 페이지 리다이렉션
                     location: `/?id=${title}`
@@ -119,8 +125,7 @@ var app = http.createServer(function (request, response) {
                         <p><textarea name="description" placeholder="description" cols=120 rows=5>${description}</textarea></p>
                         <p><input type="submit"></p>
                     </form>
-                    `,
-                    `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+                    `, '');
                 response.writeHead(200);
                 response.end(template);
             });
@@ -139,13 +144,32 @@ var app = http.createServer(function (request, response) {
             var title = post.title;
             var description = post.description;
 
-            fs.rename(`data/${id}`, `data/${title}`, function(err){
-                fs.writeFile(`data/${title}`, description, function(err){
+            fs.rename(`data/${id}`, `data/${title}`, function (err) {
+                fs.writeFile(`data/${title}`, description, function (err) {
                     response.writeHead(302, {   // 302 : 페이지 리다이렉션
                         location: `/?id=${title}`
                     });
                     response.end();
                 });
+            });
+        });
+    } else if (pathname === '/delete_process') {
+        // delete 버튼을 클릭한 경우
+        var body = '';
+
+        request.on('data', function (data) {
+            body += data;
+        });
+
+        request.on('end', function () {
+            var post = qs.parse(body);
+            var id = post.id;
+            
+            fs.unlink(`data/${id}`, function (err) {
+                response.writeHead(302, {   // 302 : 페이지 리다이렉션
+                    location: '/'
+                });
+                response.end();
             });
         });
     } else {
