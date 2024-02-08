@@ -4,6 +4,7 @@ var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
 var template = require('./lib/template.js');
+var path = require('path');
 
 // 2. http 모듈로 서버를 생성, 사용자로부터 http 요청이 들어오면 function 블럭 내부의 코드를 실행해서 응답 
 var app = http.createServer(function (request, response) {
@@ -32,8 +33,10 @@ var app = http.createServer(function (request, response) {
         } else {
             // 메인 홈페이지가 아닌 경우
             fs.readdir('./data', function (error, filelist) {
-                fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
-                    var title = queryData.id;
+                var filteredId = path.parse(`${queryData.id}`).base;
+                
+                fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
+                    var title = filteredId;
                     var list = template.list(filelist);
                     var html = template.HTML(title, list,
                         `<h2>${title}</h2>${description}`,
@@ -86,9 +89,10 @@ var app = http.createServer(function (request, response) {
         });
     } else if (pathname === '/update') {
         // update 버튼을 클릭한 경우
+        var filteredId = path.parse(`${queryData.id}`).base;
         fs.readdir('./data', function (error, filelist) {
-            fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
-                var title = queryData.id;
+            fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
+                var title = filteredId;
                 var list = template.list(filelist);
                 var html = template.HTML(title, list, `
                     <form action="/update_process" method="post">
@@ -113,10 +117,11 @@ var app = http.createServer(function (request, response) {
         request.on('end', function () {
             var post = qs.parse(body);
             var id = post.id;
+            var filteredId = path.parse(id).base;
             var title = post.title;
             var description = post.description;
 
-            fs.rename(`data/${id}`, `data/${title}`, function (err) {
+            fs.rename(`data/${filteredId}`, `data/${title}`, function (err) {
                 fs.writeFile(`data/${title}`, description, function (err) {
                     response.writeHead(302, {   // 302 : 페이지 리다이렉션
                         location: `/?id=${title}`
