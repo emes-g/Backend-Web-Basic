@@ -80,10 +80,7 @@ app.post('/create_process', function (request, response) {
         var description = post.description;
 
         fs.writeFile(`data/${title}`, description, function (err) {
-            response.writeHead(302, {   // 302 : 페이지 리다이렉션
-                location: `/?id=${title}`
-            });
-            response.end();
+            response.redirect(`/page/${title}`);
         });
     });
 })
@@ -125,10 +122,7 @@ app.post('/update_process', function (request, response) {
 
         fs.rename(`data/${filteredId}`, `data/${title}`, function (err) {
             fs.writeFile(`data/${title}`, description, function (err) {
-                response.writeHead(302, {   // 302 : 페이지 리다이렉션
-                    location: `/page/${title}`
-                });
-                response.end();
+                response.redirect(`/page/${title}`);
             });
         });
     });
@@ -147,10 +141,7 @@ app.post('/delete_process', function (request, response) {
         var id = post.id;
 
         fs.unlink(`data/${id}`, function (err) {
-            response.writeHead(302, {   // 302 : 페이지 리다이렉션
-                location: '/'
-            });
-            response.end();
+            response.redirect('/');
         });
     });
 })
