@@ -39,7 +39,7 @@ app.get('/page/:pageId', function (request, response) {
             var html = template.HTML(sanitizedTitle, list,
                 `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
                 `<a href="/create">create</a>
-                 <a href="/update?id=${sanitizedTitle}">update</a>
+                 <a href="/update/${sanitizedTitle}">update</a>
                  <form action="delete_process" method="post">
                     <input type="hidden" name="id" value="${sanitizedTitle}">
                     <input type="submit" value="delete">
@@ -84,6 +84,52 @@ app.post('/create_process', function (request, response) {
                 location: `/?id=${title}`
             });
             response.end();
+        });
+    });
+})
+
+// update 버튼을 클릭한 경우
+app.get('/update/:pageId', function (request, response) {
+    var filteredId = path.parse(`${request.params.pageId}`).base;
+    fs.readdir('./data', function (error, filelist) {
+        fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
+            var title = filteredId;
+            var list = template.list(filelist);
+            var html = template.HTML(title, list, `
+                <form action="/update_process" method="post">
+                    <p><input type="hidden" name="id" value="${title}"></p>
+                    <p><input type="text" name="title" placeholder="title" value="${title}"></p>
+                    <p><textarea name="description" placeholder="description" cols=120 rows=5>${description}</textarea></p>
+                    <p><input type="submit"></p>
+                </form>
+                `, '');
+            response.send(html);
+        });
+    });
+})
+
+// /update 페이지에서 제출 버튼을 클릭한 경우
+app.post('/update_process', function (request, response) {
+    var body = '';
+
+    request.on('data', function (data) {
+        body += data;
+    });
+
+    request.on('end', function () {
+        var post = qs.parse(body);
+        var id = post.id;
+        var filteredId = path.parse(id).base;   // 수정 전 제목
+        var title = post.title; // 수정 후 제목
+        var description = post.description;
+
+        fs.rename(`data/${filteredId}`, `data/${title}`, function (err) {
+            fs.writeFile(`data/${title}`, description, function (err) {
+                response.writeHead(302, {   // 302 : 페이지 리다이렉션
+                    location: `/page/${title}`
+                });
+                response.end();
+            });
         });
     });
 })
