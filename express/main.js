@@ -7,6 +7,8 @@ var template = require('./lib/template.js');
 var path = require('path');
 const sanitizeHtml = require('sanitize-html');
 var qs = require('querystring');
+var bodyParser = require('body-parser')
+app.use(bodyParser.urlencoded({ extended: false }))
 
 // route, routing
 // 접속한 페이지가 메인 홈페이지인 경우
@@ -68,20 +70,12 @@ app.get('/create', function (request, response) {
 
 // /create 페이지에서 제출 버튼을 클릭한 경우
 app.post('/create_process', function (request, response) {
-    var body = '';
+    var post = request.body;
+    var title = post.title;
+    var description = post.description;
 
-    request.on('data', function (data) {
-        body += data;
-    });
-
-    request.on('end', function () {
-        var post = qs.parse(body);
-        var title = post.title;
-        var description = post.description;
-
-        fs.writeFile(`data/${title}`, description, function (err) {
-            response.redirect(`/page/${title}`);
-        });
+    fs.writeFile(`data/${title}`, description, function (err) {
+        response.redirect(`/page/${title}`);
     });
 })
 
@@ -107,42 +101,26 @@ app.get('/update/:pageId', function (request, response) {
 
 // /update 페이지에서 제출 버튼을 클릭한 경우
 app.post('/update_process', function (request, response) {
-    var body = '';
+    var post = request.body;
+    var id = post.id;
+    var filteredId = path.parse(id).base;   // 수정 전 제목
+    var title = post.title; // 수정 후 제목
+    var description = post.description;
 
-    request.on('data', function (data) {
-        body += data;
-    });
-
-    request.on('end', function () {
-        var post = qs.parse(body);
-        var id = post.id;
-        var filteredId = path.parse(id).base;   // 수정 전 제목
-        var title = post.title; // 수정 후 제목
-        var description = post.description;
-
-        fs.rename(`data/${filteredId}`, `data/${title}`, function (err) {
-            fs.writeFile(`data/${title}`, description, function (err) {
-                response.redirect(`/page/${title}`);
-            });
+    fs.rename(`data/${filteredId}`, `data/${title}`, function (err) {
+        fs.writeFile(`data/${title}`, description, function (err) {
+            response.redirect(`/page/${title}`);
         });
     });
 })
 
 // delete 버튼을 클릭한 경우
 app.post('/delete_process', function (request, response) {
-    var body = '';
+    var post = request.body;
+    var id = post.id;
 
-    request.on('data', function (data) {
-        body += data;
-    });
-
-    request.on('end', function () {
-        var post = qs.parse(body);
-        var id = post.id;
-
-        fs.unlink(`data/${id}`, function (err) {
-            response.redirect('/');
-        });
+    fs.unlink(`data/${id}`, function (err) {
+        response.redirect('/');
     });
 })
 
