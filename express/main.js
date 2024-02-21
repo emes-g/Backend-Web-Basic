@@ -6,6 +6,7 @@ var fs = require('fs');
 var template = require('./lib/template.js');
 var path = require('path');
 const sanitizeHtml = require('sanitize-html');
+var qs = require('querystring');
 
 // route, routing
 // 접속한 페이지가 메인 홈페이지인 경우
@@ -47,6 +48,44 @@ app.get('/page/:pageId', function (request, response) {
             response.send(html);
         })
     })
+})
+
+// create 버튼을 클릭한 경우
+app.get('/create', function (request, response) {
+    fs.readdir('./data', function (error, filelist) {
+        var title = 'WEB - create';
+        var list = template.list(filelist);
+        var html = template.HTML(title, list, `
+        <form action="/create_process" method="post">
+            <p><input type="text" name="title" placeholder="title"></p>
+            <p><textarea name="description" placeholder="description" cols=120 rows=5></textarea></p>
+            <p><input type="submit"></p>
+        </form>
+        `, '');
+        response.send(html);
+    })
+})
+
+// /create 페이지에서 제출 버튼을 클릭한 경우
+app.post('/create_process', function (request, response) {
+    var body = '';
+
+    request.on('data', function (data) {
+        body += data;
+    });
+
+    request.on('end', function () {
+        var post = qs.parse(body);
+        var title = post.title;
+        var description = post.description;
+
+        fs.writeFile(`data/${title}`, description, function (err) {
+            response.writeHead(302, {   // 302 : 페이지 리다이렉션
+                location: `/?id=${title}`
+            });
+            response.end();
+        });
+    });
 })
 
 // listen
