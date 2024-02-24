@@ -27,6 +27,9 @@ app.get('*', function (request, response, next) {
     })
 })
 
+// 3. static files
+app.use(express.static('public'))
+
 // route, routing
 // 접속한 페이지가 메인 홈페이지인 경우
 app.get('/', function (request, response) {
@@ -34,7 +37,11 @@ app.get('/', function (request, response) {
     var description = 'Hello, Node.js';
     var list = template.list(request.list);
     var html = template.HTML(title, list,
-        `<h2>${title}</h2>${description}`,
+        `
+        <h2>${title}</h2>
+        ${description}
+        <img src="./images/universe.jpg" style="width:50%; display:block; margin-top:10px">
+        `,
         `<a href="/create">create</a>`);
     response.send(html);
 })
