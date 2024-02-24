@@ -2,6 +2,7 @@ var express = require('express')
 var router = express.Router()
 var template = require('../lib/template.js')
 
+// 접속한 페이지가 메인 홈페이지인 경우
 router.get('/', function (request, response) {
     var title = 'Welcome';
     var description = 'Hello, Node.js';
