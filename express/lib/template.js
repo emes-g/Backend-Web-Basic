@@ -22,7 +22,7 @@ module.exports = {
     list: function (filelist) {
         var list = '<ul>';
         for (var i = 0; i < filelist.length; i++)
-            list += `<li><a href="/page/${filelist[i]}">${filelist[i]}</a></li>`
+            list += `<li><a href="/topic/${filelist[i]}">${filelist[i]}</a></li>`
         list += '</ul>';
         return list;
     }
