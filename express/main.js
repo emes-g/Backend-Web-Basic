@@ -8,11 +8,13 @@ var bodyParser = require('body-parser')
 var compression = require('compression')
 var topicRouter = require('./routes/topic.js')
 var indexRouter = require('./routes/index.js')
+var helmet = require('helmet')
 
 // middle-ware
 // 1. third-party
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(compression())  // compress all responses
+app.use(helmet())
 
 // 2. my middle-ware
 app.get('*', function (request, response, next) {
