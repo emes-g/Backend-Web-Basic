@@ -31,7 +31,7 @@ app.get('*', function (request, response, next) {
 app.use(express.static('public'))
 
 // route, routing
-// 접속한 페이지가 메인 홈페이지인 경우
+// 1. 접속한 페이지가 메인 홈페이지인 경우
 app.get('/', function (request, response) {
     var title = 'Welcome';
     var description = 'Hello, Node.js';
@@ -46,11 +46,13 @@ app.get('/', function (request, response) {
     response.send(html);
 })
 
-// 메인 홈페이지가 아닌 경우
-app.get('/page/:pageId', function (request, response) {
+// 2. 메인 홈페이지가 아닌 경우
+app.get('/page/:pageId', function (request, response, next) {
     var filteredId = path.parse(`${request.params.pageId}`).base;
 
     fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
+        if(err)
+            next('err');
         var title = filteredId;
         var sanitizedTitle = sanitizeHtml(title);
         var sanitizedDescription = sanitizeHtml(description);
@@ -68,7 +70,7 @@ app.get('/page/:pageId', function (request, response) {
     })
 })
 
-// create 버튼을 클릭한 경우
+// 3. create 버튼을 클릭한 경우
 app.get('/create', function (request, response) {
     var title = 'WEB - create';
     var list = template.list(request.list);
@@ -82,7 +84,7 @@ app.get('/create', function (request, response) {
     response.send(html);
 })
 
-// /create 페이지에서 제출 버튼을 클릭한 경우
+// 4. /create 페이지에서 제출 버튼을 클릭한 경우
 app.post('/create_process', function (request, response) {
     console.log(request.list);
     var post = request.body;
@@ -94,11 +96,13 @@ app.post('/create_process', function (request, response) {
     });
 })
 
-// update 버튼을 클릭한 경우
-app.get('/update/:pageId', function (request, response) {
+// 5. update 버튼을 클릭한 경우
+app.get('/update/:pageId', function (request, response, next) {
     var filteredId = path.parse(`${request.params.pageId}`).base;
 
     fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
+        if(err)
+            next('err');
         var title = filteredId;
         var list = template.list(request.list);
         var html = template.HTML(title, list, `
@@ -113,7 +117,7 @@ app.get('/update/:pageId', function (request, response) {
     });
 })
 
-// /update 페이지에서 제출 버튼을 클릭한 경우
+// 6. /update 페이지에서 제출 버튼을 클릭한 경우
 app.post('/update_process', function (request, response) {
     var post = request.body;
     var id = post.id;
@@ -128,7 +132,7 @@ app.post('/update_process', function (request, response) {
     });
 })
 
-// delete 버튼을 클릭한 경우
+// 7. delete 버튼을 클릭한 경우
 app.post('/delete_process', function (request, response) {
     var post = request.body;
     var id = post.id;
@@ -137,6 +141,18 @@ app.post('/delete_process', function (request, response) {
         response.redirect('/');
     });
 })
+
+// error-handling
+// 1. 404 error
+app.use(function (req, res, next) {
+    res.status(404).send('Sorry cant find that!');
+});
+
+// 2. else
+app.use(function (err, req, res, next) {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
+});
 
 // listen
 app.listen(port, function () {
