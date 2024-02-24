@@ -8,7 +8,11 @@ var path = require('path');
 const sanitizeHtml = require('sanitize-html');
 var qs = require('querystring');
 var bodyParser = require('body-parser')
+var compression = require('compression')
+
+// middle-ware
 app.use(bodyParser.urlencoded({ extended: false }))
+app.use(compression())  // compress all responses
 
 // route, routing
 // 접속한 페이지가 메인 홈페이지인 경우
