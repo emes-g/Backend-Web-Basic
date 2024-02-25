@@ -9,12 +9,23 @@ var compression = require('compression')
 var topicRouter = require('./routes/topic.js')
 var indexRouter = require('./routes/index.js')
 var helmet = require('helmet')
+var cspOptions = {
+    // 외부에서 가지고 오고 싶은 자원이 있는 경우
+    directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "script-src": [
+            "https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        ]
+    }
+};
 
 // middle-ware
 // 1. third-party
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(compression())  // compress all responses
-app.use(helmet())
+app.use(helmet({
+    contentSecurityPolicy: cspOptions
+}));
 
 // 2. my middle-ware
 app.get('*', function (request, response, next) {
