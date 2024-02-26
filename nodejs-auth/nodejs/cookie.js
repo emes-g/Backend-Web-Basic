@@ -22,7 +22,11 @@ http.createServer(function (request, response) {
             'yummy_cookie=choco', 
             'tasty_cookie=strawberry',
             // permanent : 지정된 기간동안 살아있는 쿠키
-            `Permanent=cookies; Max-age=${60*60*24*30}`
+            `Permanent=cookies; Max-age=${60*60*24*30}`,
+            // Secure : https가 아닌 통신에서는 쿠키를 전송하지 않음
+            'Secure=Secure; Secure',
+            // HttpOnly : 클라이언트에서 JS를 이용한 쿠키 탈취문제(XSS)를 예방할 수 있게 함
+            'HttpOnly=HttpOnly; HttpOnly'
         ]
     })
     response.end('Cookie!!');
