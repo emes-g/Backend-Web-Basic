@@ -6,6 +6,33 @@ var qs = require('querystring');
 var template = require('./lib/template.js');
 var path = require('path');
 const sanitizeHtml = require('sanitize-html');
+var cookie = require('cookie');
+
+function authIsOwner(request, response) {
+    var isOwner = false;
+    var cookies = {};
+    if (request.headers.cookie) {
+        cookies = cookie.parse(request.headers.cookie);
+        if (cookies.email === "egoing777@gmail.com" && cookies.password === "111111")
+            isOwner = true;
+    }
+    return isOwner;
+}
+
+function autoStatusUI(request, response) {
+    var authStatusUI = authIsOwner(request, response) ? '<a href="/logout_process">logout</a>' : '<a href="/login">login</a>';
+    return authStatusUI;
+}
+
+function requireLogin(request, response){
+    if(!authIsOwner(request, response)){
+        // redirect to login page after alert
+        response.write("<script>alert('Login required!!'); location.href='/login'</script>");
+        response.end();
+        return false;
+    }
+    return true;
+}
 
 // create server
 var app = http.createServer(function (request, response) {
@@ -26,13 +53,16 @@ var app = http.createServer(function (request, response) {
                 var list = template.list(filelist);
                 var html = template.HTML(title, list,
                     `<h2>${title}</h2>${description}`,
-                    `<a href="/create">create</a>`);
+                    `<a href="/create">create</a>`,
+                    autoStatusUI(request, response));
                 response.writeHead(200);    // 200 : 파일을 성공적으로 전달함
                 response.end(html);
             })
-
         } else {
             // 메인 홈페이지가 아닌 경우
+            if (!requireLogin(request, response))   
+                return false;
+
             fs.readdir('./data', function (error, filelist) {
                 var filteredId = path.parse(`${queryData.id}`).base;
 
@@ -49,7 +79,7 @@ var app = http.createServer(function (request, response) {
                             <input type="hidden" name="id" value="${sanitizedTitle}">
                             <input type="submit" value="delete">
                          </form>
-                        `);
+                        `, autoStatusUI(request, response));
                     response.writeHead(200);
                     response.end(html);
                 });
@@ -66,12 +96,15 @@ var app = http.createServer(function (request, response) {
                 <p><textarea name="description" placeholder="description" cols=120 rows=5></textarea></p>
                 <p><input type="submit"></p>
             </form>
-            `, '');
+            `, '', autoStatusUI(request, response));
             response.writeHead(200);
             response.end(html);
         })
     } else if (pathname === '/create_process') {
         // /create 페이지에서 제출 버튼을 클릭한 경우
+        if (!requireLogin(request, response))   
+            return false;
+
         var body = '';
 
         request.on('data', function (data) {
@@ -104,7 +137,7 @@ var app = http.createServer(function (request, response) {
                         <p><textarea name="description" placeholder="description" cols=120 rows=5>${description}</textarea></p>
                         <p><input type="submit"></p>
                     </form>
-                    `, '');
+                    `, '', autoStatusUI(request, response));
                 response.writeHead(200);
                 response.end(html);
             });
@@ -151,6 +184,65 @@ var app = http.createServer(function (request, response) {
                 });
                 response.end();
             });
+        });
+    } else if (pathname === "/login") {
+        fs.readdir('./data', function (error, filelist) {
+            var title = 'Login';
+            var list = template.list(filelist);
+            var html = template.HTML(title, list, `
+                <form action="/login_process" method="post">
+                    <p><input type="text" name="email" placeholder="email"></p>
+                    <p><input type="password" name="password" placeholder="password"></p>
+                    <p><input type="submit"></p>
+                </form>
+                `, '', '');
+            response.writeHead(200);    // 200 : 파일을 성공적으로 전달함
+            response.end(html);
+        })
+    } else if (pathname === "/login_process") {
+        // /login에서 제출 버튼을 클릭한 경우
+        var body = '';
+
+        request.on('data', function (data) {
+            body += data;
+        });
+
+        request.on('end', function () {
+            var post = qs.parse(body);  // qs to object
+            var email = post.email;
+            var password = post.password;
+            if (email === "egoing777@gmail.com" && password === "111111") {
+                response.writeHead(302, {   // 302 : 페이지 리다이렉션
+                    'Set-Cookie': [
+                        `email=${email}`,
+                        `password=${password}`,
+                        `nickname=egoing`
+                    ],
+                    location: '/'
+                });
+                response.end();
+            } else {
+                response.end('who?');
+            }
+        });
+    } else if (pathname === "/logout_process") {
+        // /logout 버튼을 클릭한 경우
+        var body = '';
+
+        request.on('data', function (data) {
+            body += data;
+        });
+
+        request.on('end', function () {
+            response.writeHead(302, {   // 302 : 페이지 리다이렉션
+                'Set-Cookie': [
+                    `email=; Max-Age=0`,
+                    `password=; Max-Age=0`,
+                    `nickname=; Max-Age=0`
+                ],
+                location: '/'
+            });
+            response.end();
         });
     } else {
         response.writeHead(404);    // 404 : 파일을 찾을 수 없음

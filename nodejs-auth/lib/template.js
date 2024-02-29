@@ -1,5 +1,5 @@
 module.exports = {
-    HTML: function (title, list, body, control) {
+    HTML: function (title, list, body, control, authStatusUI) {
         return `
         <!doctype html>
         <html>
@@ -10,6 +10,7 @@ module.exports = {
             <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
         </head>
         <body>
+            ${authStatusUI}
             <h1><a href="/">WEB</a></h1>
             ${list}
             ${control}
