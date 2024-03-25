@@ -13,7 +13,7 @@ function authIsOwner(request, response) {
     var cookies = {};
     if (request.headers.cookie) {
         cookies = cookie.parse(request.headers.cookie);
-        if (cookies.email === "egoing777@gmail.com" && cookies.password === "111111")
+        if (cookies.email === "egoing777@gmail.com" && cookies.password === "0000")
             isOwner = true;
     }
     return isOwner;
